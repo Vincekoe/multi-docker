@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t vincekoe/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true vincekoe/react-test npm test
+
+after_success:
+  - docker build -t vincekoe/multi-client ./client
+  - docker build -t vincekoe/multi-nginx ./nginx
+  - docker build -t vincekoe/multi-server ./server
+  - docker build -t vincekoe/multi-worker ./worker
+  # Log in to docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  #Take those images and push them to docker hub
+  - docker push vincekoe/multi-client
+  - docker push vincekoe/multi-nginx
+  - docker push vincekoe/multi-server
+  - docker push vincekoe/multi-worker
